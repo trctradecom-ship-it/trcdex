@@ -1,11 +1,21 @@
-const CONTRACT_ADDRESS="0xA6F33c57891E52258d68BC99c593207E5C1B4a51" 
+const CONTRACT_ADDRESS="0xA6F33c57891E52258d68BC99c593207E5C1B4a51"
 
 const ABI=[
 
-"function trcPrice() view returns(uint256)",
-"function polPrice() view returns(uint256)",
-"function buyTokens() payable",
-"function sellTokens(uint256)",
+"function buy() payable",
+"function sell(uint256)",
+"function getLatestPrice() view returns(uint256)",
+"function usdPrice() view returns(uint256)",
+"function token() view returns(address)",
+"function getLastSellTime(address) view returns(uint256)",
+
+"event TokensPurchased(address buyer,uint256 polPaid,uint256 tokensReceived)",
+"event TokensSold(address seller,uint256 tokensSold,uint256 polReceived)"
+
+]
+
+const ERC20_ABI=[
+
 "function balanceOf(address) view returns(uint256)"
 
 ]
@@ -13,23 +23,18 @@ const ABI=[
 let provider
 let signer
 let contract
+let tokenContract
 let wallet
 
-let lastSell=0
-
 const connectBtn=document.getElementById("connectBtn")
-const buyBtn=document.getElementById("buyBtn")
-const sellBtn=document.getElementById("sellBtn")
 
 connectBtn.onclick=connectWallet
-buyBtn.onclick=buy
-sellBtn.onclick=sell
 
 async function connectWallet(){
 
 if(!window.ethereum){
 
-alert("Install wallet")
+alert("Open inside wallet browser")
 
 return
 
@@ -47,110 +52,156 @@ contract=new ethers.Contract(CONTRACT_ADDRESS,ABI,signer)
 
 connectBtn.innerText=wallet.slice(0,6)+"..."+wallet.slice(-4)
 
+const tokenAddress=await contract.token()
+
+tokenContract=new ethers.Contract(tokenAddress,ERC20_ABI,provider)
+
+loadBalance()
+
 loadPrices()
+
+loadHistory()
+
+}
+
+async function loadBalance(){
+
+const bal=await tokenContract.balanceOf(wallet)
+
+document.getElementById("trcBalance").innerText=
+ethers.formatUnits(bal,18)
 
 }
 
 async function loadPrices(){
 
-try{
+const trc=await contract.getLatestPrice()
 
-const trc=await contract.trcPrice()
-const pol=await contract.polPrice()
+const pol=await contract.usdPrice()
 
 document.getElementById("trcPrice").innerText="$"+ethers.formatUnits(trc,18)
 
 document.getElementById("polPrice").innerText="$"+ethers.formatUnits(pol,18)
 
-}catch(e){}
+updateChart(parseFloat(ethers.formatUnits(trc,18)))
 
 }
 
 setInterval(loadPrices,5000)
 
+document.getElementById("buyBtn").onclick=buy
+
 async function buy(){
 
 try{
 
-const value=document.getElementById("amount").value
+const val=document.getElementById("buyAmount").value
 
-document.getElementById("status").innerText="Transaction sending..."
+document.getElementById("status").innerText="Buying..."
 
-const tx=await contract.buyTokens({
-value:ethers.parseEther(value)
+const tx=await contract.buy({
+value:ethers.parseEther(val)
 })
 
 await tx.wait()
 
-document.getElementById("status").innerText="Buy successful"
+document.getElementById("status").innerText="Buy confirmed"
+
+loadBalance()
 
 }catch(e){
 
-document.getElementById("status").innerText="Transaction failed"
+document.getElementById("status").innerText="Failed"
 
 }
 
 }
+
+document.getElementById("sellBtn").onclick=sell
 
 async function sell(){
 
-const now=Math.floor(Date.now()/1000)
-
-if(now<lastSell+86400){
-
-alert("24h cooldown active")
-
-return
-
-}
-
 try{
 
-const amount=document.getElementById("amount").value
+const val=document.getElementById("sellAmount").value
 
 document.getElementById("status").innerText="Selling..."
 
-const tx=await contract.sellTokens(
-ethers.parseUnits(amount,18)
+const tx=await contract.sell(
+ethers.parseEther(val)
 )
 
 await tx.wait()
 
-lastSell=now
+document.getElementById("status").innerText="Sell confirmed"
 
-document.getElementById("status").innerText="Sell successful"
+loadBalance()
 
 }catch(e){
 
-document.getElementById("status").innerText="Transaction failed"
+document.getElementById("status").innerText="Failed"
 
 }
 
 }
 
-function updateTimer(){
+async function loadHistory(){
 
-if(lastSell===0)return
+contract.on("TokensPurchased",(buyer,pol,tokens)=>{
 
-const now=Math.floor(Date.now()/1000)
+addHistory("BUY "+ethers.formatUnits(tokens,18)+" TRC")
 
-let remain=(lastSell+86400)-now
+})
 
-if(remain<=0){
+contract.on("TokensSold",(seller,tokens,pol)=>{
 
-document.getElementById("countdown").innerText="Available"
+addHistory("SELL "+ethers.formatUnits(tokens,18)+" TRC")
 
-return
-
-}
-
-let h=Math.floor(remain/3600)
-let m=Math.floor((remain%3600)/60)
-let s=remain%60
-
-document.getElementById("countdown").innerText=
-h+"h "+m+"m "+s+"s"
+})
 
 }
 
-setInterval(updateTimer,1000)
+function addHistory(text){
+
+const div=document.createElement("div")
+
+div.className="tradeItem"
+
+div.innerText=text
+
+document.getElementById("history").prepend(div)
+
+}
+
+let chartData=[]
+
+const canvas=document.getElementById("priceChart")
+
+const ctx=canvas.getContext("2d")
+
+function updateChart(price){
+
+chartData.push(price)
+
+if(chartData.length>40) chartData.shift()
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+ctx.beginPath()
+
+ctx.strokeStyle="#0ecb81"
+
+for(let i=0;i<chartData.length;i++){
+
+let x=i*10
+
+let y=200-chartData[i]*100
+
+if(i==0) ctx.moveTo(x,y)
+else ctx.lineTo(x,y)
+
+}
+
+ctx.stroke()
+
+}
