@@ -1,207 +1,187 @@
-const CONTRACT_ADDRESS="0xA6F33c57891E52258d68BC99c593207E5C1B4a51"
+// ============================
+// IMPORT CHART
+// ============================
 
-const ABI=[ 
+const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+width:700,
+height:400,
+layout:{
+background:{color:'#111'},
+textColor:'#DDD'
+},
+grid:{
+vertLines:{color:'#222'},
+horzLines:{color:'#222'}
+}
+});
 
-"function buy() payable",
-"function sell(uint256)",
-"function getLatestPrice() view returns(uint256)",
-"function usdPrice() view returns(uint256)",
-"function token() view returns(address)",
-"function getLastSellTime(address) view returns(uint256)",
+const candleSeries = chart.addCandlestickSeries();
 
-"event TokensPurchased(address buyer,uint256 polPaid,uint256 tokensReceived)",
-"event TokensSold(address seller,uint256 tokensSold,uint256 polReceived)"
 
-]
+// ============================
+// SAMPLE MARKET DATA
+// ============================
 
-const ERC20_ABI=[
+let data = [
+{time:'2024-01-01',open:100,high:110,low:90,close:105},
+{time:'2024-01-02',open:105,high:120,low:100,close:115},
+{time:'2024-01-03',open:115,high:130,low:110,close:125},
+{time:'2024-01-04',open:125,high:140,low:120,close:135}
+];
 
-"function balanceOf(address) view returns(uint256)"
+candleSeries.setData(data);
 
-]
+
+// ============================
+// POLYGON WALLET CONNECTION
+// ============================
 
 let provider
 let signer
+let walletAddress
 let contract
-let tokenContract
-let wallet
 
-const connectBtn=document.getElementById("connectBtn")
+// YOUR CONTRACT ADDRESS
+const CONTRACT_ADDRESS = "0xYourContractAddressHere"
 
-connectBtn.onclick=connectWallet
 
-async function connectWallet(){
+// SIMPLE ABI
+const CONTRACT_ABI = [
 
-if(!window.ethereum){
+"function buy(uint256 amount) payable",
 
-alert("Open inside wallet browser")
+"function sell(uint256 amount)"
 
-return
+]
 
-}
 
-provider=new ethers.BrowserProvider(window.ethereum)
+document.getElementById("connectBtn").onclick = async () => {
+
+if(window.ethereum){
+
+provider = new ethers.providers.Web3Provider(window.ethereum)
 
 await provider.send("eth_requestAccounts",[])
 
-signer=await provider.getSigner()
+signer = provider.getSigner()
 
-wallet=await signer.getAddress()
+walletAddress = await signer.getAddress()
 
-contract=new ethers.Contract(CONTRACT_ADDRESS,ABI,signer)
+document.getElementById("walletAddress").innerText = walletAddress
 
-connectBtn.innerText=wallet.slice(0,6)+"..."+wallet.slice(-4)
+contract = new ethers.Contract(
+CONTRACT_ADDRESS,
+CONTRACT_ABI,
+signer
+)
 
-const tokenAddress=await contract.token()
+alert("Wallet Connected")
 
-tokenContract=new ethers.Contract(tokenAddress,ERC20_ABI,provider)
+}else{
 
-loadBalance()
-
-loadPrices()
-
-loadHistory()
-
-}
-
-async function loadBalance(){
-
-const bal=await tokenContract.balanceOf(wallet)
-
-document.getElementById("trcBalance").innerText=
-ethers.formatUnits(bal,18)
+alert("Install MetaMask")
 
 }
 
-async function loadPrices(){
-
-const trc=await contract.getLatestPrice()
-
-const pol=await contract.usdPrice()
-
-document.getElementById("trcPrice").innerText="$"+ethers.formatUnits(trc,18)
-
-document.getElementById("polPrice").innerText="$"+ethers.formatUnits(pol,18)
-
-updateChart(parseFloat(ethers.formatUnits(trc,18)))
-
 }
 
-setInterval(loadPrices,5000)
 
-document.getElementById("buyBtn").onclick=buy
 
-async function buy(){
+// ============================
+// BUY FUNCTION
+// ============================
+
+document.getElementById("buyBtn").onclick = async () => {
+
+let amount = document.getElementById("amount").value
+
+let price = data[data.length-1].close
 
 try{
 
-const val=document.getElementById("buyAmount").value
-
-document.getElementById("status").innerText="Buying..."
-
-const tx=await contract.buy({
-value:ethers.parseEther(val)
-})
-
-await tx.wait()
-
-document.getElementById("status").innerText="Buy confirmed"
-
-loadBalance()
-
-}catch(e){
-
-document.getElementById("status").innerText="Failed"
-
+let tx = await contract.buy(
+ethers.utils.parseUnits(amount,18),
+{
+value: ethers.utils.parseEther(amount)
 }
-
-}
-
-document.getElementById("sellBtn").onclick=sell
-
-async function sell(){
-
-try{
-
-const val=document.getElementById("sellAmount").value
-
-document.getElementById("status").innerText="Selling..."
-
-const tx=await contract.sell(
-ethers.parseEther(val)
 )
 
 await tx.wait()
 
-document.getElementById("status").innerText="Sell confirmed"
+addHistory("BUY",amount,price)
 
-loadBalance()
+autoSellCalc(price)
 
 }catch(e){
 
-document.getElementById("status").innerText="Failed"
+console.error(e)
+alert("Transaction Failed")
 
 }
 
 }
 
-async function loadHistory(){
 
-contract.on("TokensPurchased",(buyer,pol,tokens)=>{
 
-addHistory("BUY "+ethers.formatUnits(tokens,18)+" TRC")
+// ============================
+// SELL FUNCTION
+// ============================
 
-})
+document.getElementById("sellBtn").onclick = async () => {
 
-contract.on("TokensSold",(seller,tokens,pol)=>{
+let amount = document.getElementById("amount").value
 
-addHistory("SELL "+ethers.formatUnits(tokens,18)+" TRC")
+let price = data[data.length-1].close
 
-})
+try{
 
-}
+let tx = await contract.sell(
+ethers.utils.parseUnits(amount,18)
+)
 
-function addHistory(text){
+await tx.wait()
 
-const div=document.createElement("div")
+addHistory("SELL",amount,price)
 
-div.className="tradeItem"
+}catch(e){
 
-div.innerText=text
+console.error(e)
 
-document.getElementById("history").prepend(div)
-
-}
-
-let chartData=[]
-
-const canvas=document.getElementById("priceChart")
-
-const ctx=canvas.getContext("2d")
-
-function updateChart(price){
-
-chartData.push(price)
-
-if(chartData.length>40) chartData.shift()
-
-ctx.clearRect(0,0,canvas.width,canvas.height)
-
-ctx.beginPath()
-
-ctx.strokeStyle="#0ecb81"
-
-for(let i=0;i<chartData.length;i++){
-
-let x=i*10
-
-let y=200-chartData[i]*100
-
-if(i==0) ctx.moveTo(x,y)
-else ctx.lineTo(x,y)
+alert("Sell Failed")
 
 }
 
-ctx.stroke()
+}
+
+
+
+// ============================
+// AUTO SELL 1%
+// ============================
+
+function autoSellCalc(price){
+
+let sell = price * 1.01
+
+document.getElementById("autoSell").innerText = sell.toFixed(4)
+
+}
+
+
+
+// ============================
+// TRADE HISTORY
+// ============================
+
+function addHistory(type,amount,price){
+
+let table = document.querySelector("#history tbody")
+
+let row = table.insertRow()
+
+row.insertCell(0).innerText = type
+row.insertCell(1).innerText = amount
+row.insertCell(2).innerText = price
+row.insertCell(3).innerText = new Date().toLocaleTimeString()
 
 }
