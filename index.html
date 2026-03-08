@@ -8,58 +8,49 @@
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
 </head>
 
 <body>
 
-<div class="app">
-
 <div class="header">
 
-<div class="market">
+<div class="pair">TRC / POL</div>
 
-TRC / POL
-
-<div class="prices">
-
-<span id="trcPrice">$0</span>
-<span id="polPrice">$0</span>
-
+<div class="priceBox">
+TRC Price: <span id="trcPrice">$0</span>
 </div>
 
-</div>
-
-<div id="wallet">Not Connected</div>
+<div id="wallet">Wallet Not Connected</div>
 
 <button onclick="connect()">Connect</button>
 
 </div>
 
 
-<div class="main">
+<div class="layout">
 
-<div class="chartSide">
 
-<div class="tf">
+<div class="chartSection">
 
-<button onclick="tf(1800)">30M</button>
-<button onclick="tf(3600)">1H</button>
-<button onclick="tf(14400)">4H</button>
-<button onclick="tf(86400)">1D</button>
+<div class="controls">
 
-<button onclick="line()">Line</button>
-<button onclick="candle()">Candle</button>
+<button onclick="setTF(1800)">30m</button>
+<button onclick="setTF(3600)">1h</button>
+<button onclick="setTF(14400)">4h</button>
+<button onclick="setTF(86400)">1d</button>
+
+<button onclick="showLine()">Line</button>
+<button onclick="showCandle()">Candle</button>
 
 </div>
 
 <div id="chart"></div>
 
-<div class="history">
+<div class="trades">
 
-<h3>Trades</h3>
+<h3>Recent Trades</h3>
 
 <div id="tradeList"></div>
 
@@ -68,21 +59,28 @@ TRC / POL
 </div>
 
 
+
 <div class="tradePanel">
 
 <h3>Trade</h3>
 
-<input id="polAmount" placeholder="POL amount">
+<input id="amount" placeholder="POL amount">
 
-<button class="buy" onclick="buy()">BUY</button>
+<button class="buyBtn" onclick="buy()">Buy TRC</button>
 
-<button class="sell" onclick="sell()">SELL</button>
+<button class="sellBtn" onclick="sell()">Sell TRC</button>
 
 <div class="info">
 
-<div>Last Sell<br><span id="lastSell"></span></div>
+<div>
+Last Sell
+<span id="lastSell"></span>
+</div>
 
-<div>Next Sell<br><span id="nextSell"></span></div>
+<div>
+Next Sell
+<span id="nextSell"></span>
+</div>
 
 </div>
 
@@ -90,7 +88,6 @@ TRC / POL
 
 </div>
 
-</div>
 
 </div>
 
@@ -119,23 +116,16 @@ let contract
 let user
 
 let chart
-let candleSeries
 let lineSeries
-let volumeSeries
-
-let frame=3600
+let candleSeries
 
 function human(v){
 return Number(v).toLocaleString(undefined,{maximumFractionDigits:6})
 }
 
-function utc(t){
-return new Date(t*1000).toUTCString()
-}
-
 async function connect(){
 
-await window.ethereum.request({method:'eth_requestAccounts'})
+await window.ethereum.request({method:"eth_requestAccounts"})
 
 provider=new ethers.providers.Web3Provider(window.ethereum)
 
@@ -151,7 +141,7 @@ initChart()
 
 load()
 
-listenEvents()
+listenTrades()
 
 }
 
@@ -161,89 +151,74 @@ chart=LightweightCharts.createChart(document.getElementById("chart"),{
 
 width:document.getElementById("chart").clientWidth,
 
-height:350,
+height:380,
 
-layout:{background:{color:"#000"},textColor:"#DDD"},
+layout:{
+background:{color:"#0b0e11"},
+textColor:"#DDD"
+},
 
-grid:{vertLines:{color:"#111"},horzLines:{color:"#111"}},
+grid:{
+vertLines:{color:"#1c1f26"},
+horzLines:{color:"#1c1f26"}
+}
 
-timeScale:{timeVisible:true}
+})
 
+lineSeries=chart.addLineSeries({
+color:"#f0b90b",
+lineWidth:2
 })
 
 candleSeries=chart.addCandlestickSeries({
 
-upColor:"#00ff88",
-downColor:"#ff4d4d",
+upColor:"#0ecb81",
+downColor:"#f6465d",
 borderVisible:false,
-wickUpColor:"#00ff88",
-wickDownColor:"#ff4d4d"
-
-})
-
-lineSeries=chart.addLineSeries({color:"#FFD700",lineWidth:2})
-
-volumeSeries=chart.addHistogramSeries({
-
-priceFormat:{type:'volume'},
-
-priceScaleId:''
+wickUpColor:"#0ecb81",
+wickDownColor:"#f6465d"
 
 })
 
 }
 
-function tf(v){
-
-frame=v
-
-}
-
-function line(){
-
+function showLine(){
 lineSeries.setData([])
-
 }
 
-function candle(){
-
+function showCandle(){
 candleSeries.setData([])
+}
 
+function setTF(v){
+console.log("timeframe",v)
 }
 
 async function load(){
 
 let p=await contract.getLatestPrice()
 
-let u=await contract.usdPrice()
-
 let price=Number(p)/1e18
-let usd=Number(u)/1e18
 
 document.getElementById("trcPrice").innerText="$"+human(price)
-document.getElementById("polPrice").innerText="$"+human(usd)
 
-let time=Math.floor(Date.now()/1000)
+let t=Math.floor(Date.now()/1000)
 
-let candle={
+lineSeries.update({time:t,value:price})
 
-time:time,
+candleSeries.update({
+
+time:t,
 open:price,
 high:price,
 low:price,
 close:price
 
-}
-
-candleSeries.update(candle)
-
-lineSeries.update({time:time,value:price})
-
-volumeSeries.update({time:time,value:Math.random()*100})
+})
 
 updateSellInfo()
 
-setTimeout(load,frame*1000)
+setTimeout(load,5000)
 
 }
 
@@ -264,9 +239,9 @@ return
 
 let next=Number(last)+Number(cooldown)
 
-document.getElementById("lastSell").innerText=utc(last)
+document.getElementById("lastSell").innerText=new Date(last*1000).toLocaleString()
 
-document.getElementById("nextSell").innerText=utc(next)
+document.getElementById("nextSell").innerText=new Date(next*1000).toLocaleString()
 
 }
 
@@ -274,12 +249,10 @@ async function buy(){
 
 try{
 
-let val=document.getElementById("polAmount").value
+let val=document.getElementById("amount").value
 
 let tx=await contract.buy({
-
 value:ethers.utils.parseEther(val)
-
 })
 
 status("Transaction Sent")
@@ -290,7 +263,7 @@ status("Buy Confirmed")
 
 }catch(e){
 
-status("Failed")
+status(e.message)
 
 }
 
@@ -300,12 +273,10 @@ async function sell(){
 
 try{
 
-let val=document.getElementById("polAmount").value
+let val=document.getElementById("amount").value
 
 let tx=await contract.sell(
-
 ethers.utils.parseEther(val)
-
 )
 
 status("Transaction Sent")
@@ -316,21 +287,19 @@ status("Sell Confirmed")
 
 }catch(e){
 
-status("Failed")
+status(e.message)
 
 }
 
 }
 
 function status(t){
-
 document.getElementById("status").innerText=t
-
 }
 
-function listenEvents(){
+function listenTrades(){
 
-contract.on("TokensPurchased",(buyer,pol,tokens)=>{
+contract.on("TokensPurchased",(buyer,pol)=>{
 
 addTrade("BUY",pol)
 
@@ -346,13 +315,13 @@ addTrade("SELL",pol)
 
 function addTrade(type,val){
 
-let el=document.createElement("div")
+let row=document.createElement("div")
 
-el.className=type=="BUY"?"buyRow":"sellRow"
+row.className=type=="BUY"?"buy":"sell"
 
-el.innerText=type+" "+human(Number(val)/1e18)+" POL"
+row.innerText=type+" "+human(Number(val)/1e18)+" POL"
 
-document.getElementById("tradeList").prepend(el)
+document.getElementById("tradeList").prepend(row)
 
 }
 
