@@ -1,75 +1,61 @@
 body{
-
 margin:0;
-font-family:Arial;
 background:#0b0e11;
 color:white;
-
+font-family:Arial;
 }
 
 header{
-
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:12px;
 background:#161a1f;
-
 }
 
 .logo{
-
-font-size:18px;
 font-weight:bold;
-
+font-size:18px;
 }
 
-.prices{
-
+.pricePanel{
 font-size:14px;
-
 }
 
-.green{
-
+#trcPrice{
 color:#0ecb81;
-
 }
 
 button{
-
-padding:10px 14px;
+background:#f0b90b;
 border:none;
+padding:10px 14px;
 border-radius:6px;
 cursor:pointer;
-
 }
 
-#connectBtn{
-
-background:#f0b90b;
-color:black;
-
-}
-
-.container{
-
+.main{
+display:flex;
+flex-wrap:wrap;
 padding:20px;
-
+gap:20px;
 }
 
-.card{
-
+.chartBox{
+flex:2;
 background:#161a1f;
-border-radius:10px;
 padding:20px;
-max-width:400px;
-margin:auto;
+border-radius:10px;
+}
 
+.tradeBox{
+flex:1;
+background:#161a1f;
+padding:20px;
+border-radius:10px;
 }
 
 input{
-
 width:100%;
 padding:12px;
 margin-top:10px;
@@ -77,62 +63,50 @@ background:#0b0e11;
 border:1px solid #333;
 color:white;
 border-radius:6px;
-
 }
 
-.buy{
-
+#buyBtn{
 background:#0ecb81;
-width:100%;
 margin-top:10px;
-font-weight:bold;
-
+width:100%;
 }
 
-.sell{
-
+#sellBtn{
 background:#f6465d;
+margin-top:10px;
 width:100%;
-margin-top:10px;
-font-weight:bold;
-
 }
 
-.info{
-
-margin-top:12px;
-font-size:12px;
-color:#aaa;
-
-}
-
-.timer{
-
-margin-top:10px;
+.balance{
+margin-bottom:10px;
 color:#f0b90b;
-
 }
 
-.status{
-
+.cooldown{
 margin-top:10px;
 font-size:13px;
-
+color:#aaa;
 }
 
-@media(max-width:600px){
+.historyBox{
+padding:20px;
+}
 
-header{
+#history{
+max-height:200px;
+overflow:auto;
+font-size:13px;
+}
 
+.tradeItem{
+padding:6px;
+border-bottom:1px solid #333;
+}
+
+@media(max-width:700px){
+
+.main{
 flex-direction:column;
-gap:10px;
-
-}
-
-.card{
-
-width:100%;
-
 }
 
 }
