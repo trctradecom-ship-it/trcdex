@@ -1,271 +1,80 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
-<title>TRC Exchange</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.min.js"></script>
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<title>TRC DEX</title>
 
-<style>
+<link rel="stylesheet" href="style.css">
 
-body{
-background:#0b0e11;
-color:#eaecef;
-font-family:Arial;
-margin:0;
-}
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
 
-header{
-display:flex;
-justify-content:space-between;
-padding:15px;
-background:#161a1f;
-}
-
-.price{
-color:#0ecb81;
-font-weight:bold;
-}
-
-.container{
-display:flex;
-padding:20px;
-gap:20px;
-}
-
-.chart{
-width:70%;
-height:400px;
-background:#161a1f;
-}
-
-.trade{
-width:30%;
-background:#161a1f;
-padding:20px;
-border-radius:10px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-background:#0b0e11;
-color:white;
-border:1px solid #333;
-}
-
-button{
-width:100%;
-padding:12px;
-margin-top:10px;
-border:none;
-cursor:pointer;
-font-weight:bold;
-transition:0.3s;
-}
-
-.buy{
-background:#0ecb81;
-}
-
-.sell{
-background:#f6465d;
-}
-
-button:hover{
-transform:translateY(-2px);
-box-shadow:0 0 10px #0ecb81;
-}
-
-.notice{
-font-size:12px;
-margin-top:10px;
-color:#aaa;
-}
-
-.timer{
-margin-top:10px;
-font-size:14px;
-color:#f0b90b;
-}
-
-.status{
-margin-top:10px;
-}
-
-</style>
 </head>
 
 <body>
 
 <header>
 
-<div>
-TRC / POL
+<div class="logo">TRC / POL</div>
+
+<div class="pricePanel">
+
+TRC <span id="trcPrice">$0</span>
+
+POL <span id="polPrice">$0</span>
+
 </div>
 
-<div>
-TRC Price: <span id="trcPrice" class="price">$0.00</span>
-</div>
-
-<div>
-POL Price: <span id="polPrice">$0.00</span>
-</div>
-
-<button onclick="connectWallet()">Connect Wallet</button>
+<button id="connectBtn">Connect Wallet</button>
 
 </header>
 
+<div class="main">
 
-<div class="container">
+<div class="chartBox">
 
-<div id="chart" class="chart"></div>
-
-
-<div class="trade">
-
-<h3>Trade TRC</h3>
-
-<input id="amount" placeholder="POL amount">
-
-<button class="buy" onclick="buy()">BUY TRC</button>
-
-<button class="sell" onclick="sell()">SELL TRC</button>
-
-<div class="notice">
-Minimum Sell: $1<br>
-Daily Sell Limit: 1% balance
-</div>
-
-<div class="timer">
-Next Sell: <span id="countdown">Available</span>
-</div>
-
-<div class="status" id="status"></div>
+<canvas id="priceChart"></canvas>
 
 </div>
 
+<div class="tradeBox">
+
+<h2>Trade TRC</h2>
+
+<div class="balance">
+Balance: <span id="trcBalance">0</span> TRC
 </div>
 
+<input id="buyAmount" placeholder="POL amount to buy">
 
-<script>
+<button id="buyBtn">BUY TRC</button>
 
-let provider
-let signer
-let wallet
+<input id="sellAmount" placeholder="POL amount to receive">
 
-let lastSell=0
+<button id="sellBtn">SELL TRC</button>
 
-async function connectWallet(){
+<div class="cooldown">
+Next Sell: <span id="cooldown">Loading...</span>
+</div>
 
-provider=new ethers.BrowserProvider(window.ethereum)
-await provider.send("eth_requestAccounts",[])
+<div id="status"></div>
 
-signer=await provider.getSigner()
-wallet=await signer.getAddress()
+</div>
 
-alert("Connected: "+wallet)
+</div>
 
-}
+<div class="historyBox">
 
-function buy(){
+<h3>Recent Trades</h3>
 
-document.getElementById("status").innerHTML="Transaction Sent..."
+<div id="history"></div>
 
-setTimeout(()=>{
-document.getElementById("status").innerHTML="Transaction Confirmed"
-},3000)
+</div>
 
-}
-
-function sell(){
-
-let now=Date.now()/1000
-
-if(now < lastSell+86400){
-
-alert("Sell cooldown active")
-
-return
-
-}
-
-lastSell=now
-
-document.getElementById("status").innerHTML="Sell Transaction Sent..."
-
-setTimeout(()=>{
-document.getElementById("status").innerHTML="Sell Confirmed"
-},3000)
-
-}
-
-function updateCountdown(){
-
-if(lastSell==0)return
-
-let now=Date.now()/1000
-let remaining=(lastSell+86400)-now
-
-if(remaining<=0){
-document.getElementById("countdown").innerHTML="Available"
-return
-}
-
-let h=Math.floor(remaining/3600)
-let m=Math.floor((remaining%3600)/60)
-let s=Math.floor(remaining%60)
-
-document.getElementById("countdown").innerHTML=
-h+":"+m+":"+s
-
-}
-
-setInterval(updateCountdown,1000)
-
-
-
-function randomPrice(){
-
-let price=(Math.random()*0.01+0.03).toFixed(5)
-
-document.getElementById("trcPrice").innerHTML="$"+price
-
-}
-
-
-
-setInterval(randomPrice,5000)
-
-
-
-const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-layout:{
-background:{color:"#0b0e11"},
-textColor:"#DDD"
-},
-width:700,
-height:400
-})
-
-const lineSeries = chart.addLineSeries()
-
-let price=0.03
-
-setInterval(()=>{
-
-price = price + (Math.random()-0.5)*0.002
-
-lineSeries.update({
-time:Math.floor(Date.now()/1000),
-value:price
-})
-
-},5000)
-
-</script>
+<script src="app.js"></script>
 
 </body>
 </html>
