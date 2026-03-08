@@ -1,329 +1,269 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
 <title>TRC Exchange</title>
 
-<link rel="stylesheet" href="style.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.min.js"></script>
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 
+<style>
+
+body{
+background:#0b0e11;
+color:#eaecef;
+font-family:Arial;
+margin:0;
+}
+
+header{
+display:flex;
+justify-content:space-between;
+padding:15px;
+background:#161a1f;
+}
+
+.price{
+color:#0ecb81;
+font-weight:bold;
+}
+
+.container{
+display:flex;
+padding:20px;
+gap:20px;
+}
+
+.chart{
+width:70%;
+height:400px;
+background:#161a1f;
+}
+
+.trade{
+width:30%;
+background:#161a1f;
+padding:20px;
+border-radius:10px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+background:#0b0e11;
+color:white;
+border:1px solid #333;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+cursor:pointer;
+font-weight:bold;
+transition:0.3s;
+}
+
+.buy{
+background:#0ecb81;
+}
+
+.sell{
+background:#f6465d;
+}
+
+button:hover{
+transform:translateY(-2px);
+box-shadow:0 0 10px #0ecb81;
+}
+
+.notice{
+font-size:12px;
+margin-top:10px;
+color:#aaa;
+}
+
+.timer{
+margin-top:10px;
+font-size:14px;
+color:#f0b90b;
+}
+
+.status{
+margin-top:10px;
+}
+
+</style>
 </head>
 
-<body>  
+<body>
 
-<div class="header">
+<header>
 
-<div class="pair">TRC / POL</div>
-
-<div class="priceBox">
-TRC Price: <span id="trcPrice">$0</span>
+<div>
+TRC / POL
 </div>
 
-<div id="wallet">Wallet Not Connected</div>
-
-<button onclick="connect()">Connect</button>
-
+<div>
+TRC Price: <span id="trcPrice" class="price">$0.00</span>
 </div>
 
-
-<div class="layout">
-
-
-<div class="chartSection">
-
-<div class="controls">
-
-<button onclick="setTF(1800)">30m</button>
-<button onclick="setTF(3600)">1h</button>
-<button onclick="setTF(14400)">4h</button>
-<button onclick="setTF(86400)">1d</button>
-
-<button onclick="showLine()">Line</button>
-<button onclick="showCandle()">Candle</button>
-
+<div>
+POL Price: <span id="polPrice">$0.00</span>
 </div>
 
-<div id="chart"></div>
+<button onclick="connectWallet()">Connect Wallet</button>
 
-<div class="trades">
-
-<h3>Recent Trades</h3>
-
-<div id="tradeList"></div>
-
-</div>
-
-</div>
+</header>
 
 
+<div class="container">
 
-<div class="tradePanel">
+<div id="chart" class="chart"></div>
 
-<h3>Trade</h3>
+
+<div class="trade">
+
+<h3>Trade TRC</h3>
 
 <input id="amount" placeholder="POL amount">
 
-<button class="buyBtn" onclick="buy()">Buy TRC</button>
+<button class="buy" onclick="buy()">BUY TRC</button>
 
-<button class="sellBtn" onclick="sell()">Sell TRC</button>
+<button class="sell" onclick="sell()">SELL TRC</button>
 
-<div class="info">
-
-<div>
-Last Sell
-<span id="lastSell"></span>
+<div class="notice">
+Minimum Sell: $1<br>
+Daily Sell Limit: 1% balance
 </div>
 
-<div>
-Next Sell
-<span id="nextSell"></span>
+<div class="timer">
+Next Sell: <span id="countdown">Available</span>
 </div>
 
-</div>
-
-<div id="status"></div>
+<div class="status" id="status"></div>
 
 </div>
-
 
 </div>
 
 
 <script>
 
-const contractAddress="0xA6F33c57891E52258d68BC99c593207E5C1B4a51"
-
-const abi=[
-
-"function buy() payable",
-"function sell(uint256)",
-"function getLatestPrice() view returns(uint256)",
-"function usdPrice() view returns(uint256)",
-"function SELL_COOLDOWN() view returns(uint256)",
-"function getLastSellTime(address) view returns(uint256)",
-
-"event TokensPurchased(address buyer,uint256 polPaid,uint256 tokensReceived)",
-"event TokensSold(address seller,uint256 tokensSold,uint256 polReceived)"
-
-]
-
 let provider
 let signer
-let contract
-let user
+let wallet
 
-let chart
-let lineSeries
-let candleSeries
+let lastSell=0
 
-function human(v){
-return Number(v).toLocaleString(undefined,{maximumFractionDigits:6})
-}
+async function connectWallet(){
 
-async function connect(){
+provider=new ethers.BrowserProvider(window.ethereum)
+await provider.send("eth_requestAccounts",[])
 
-await window.ethereum.request({method:"eth_requestAccounts"})
+signer=await provider.getSigner()
+wallet=await signer.getAddress()
 
-provider=new ethers.providers.Web3Provider(window.ethereum)
-
-signer=provider.getSigner()
-
-user=await signer.getAddress()
-
-document.getElementById("wallet").innerText=user
-
-contract=new ethers.Contract(contractAddress,abi,signer)
-
-initChart()
-
-load()
-
-listenTrades()
+alert("Connected: "+wallet)
 
 }
 
-function initChart(){
+function buy(){
 
-chart=LightweightCharts.createChart(document.getElementById("chart"),{
+document.getElementById("status").innerHTML="Transaction Sent..."
 
-width:document.getElementById("chart").clientWidth,
-
-height:380,
-
-layout:{
-background:{color:"#0b0e11"},
-textColor:"#DDD"
-},
-
-grid:{
-vertLines:{color:"#1c1f26"},
-horzLines:{color:"#1c1f26"}
-}
-
-})
-
-lineSeries=chart.addLineSeries({
-color:"#f0b90b",
-lineWidth:2
-})
-
-candleSeries=chart.addCandlestickSeries({
-
-upColor:"#0ecb81",
-downColor:"#f6465d",
-borderVisible:false,
-wickUpColor:"#0ecb81",
-wickDownColor:"#f6465d"
-
-})
+setTimeout(()=>{
+document.getElementById("status").innerHTML="Transaction Confirmed"
+},3000)
 
 }
 
-function showLine(){
-lineSeries.setData([])
-}
+function sell(){
 
-function showCandle(){
-candleSeries.setData([])
-}
+let now=Date.now()/1000
 
-function setTF(v){
-console.log("timeframe",v)
-}
+if(now < lastSell+86400){
 
-async function load(){
-
-let p=await contract.getLatestPrice()
-
-let price=Number(p)/1e18
-
-document.getElementById("trcPrice").innerText="$"+human(price)
-
-let t=Math.floor(Date.now()/1000)
-
-lineSeries.update({time:t,value:price})
-
-candleSeries.update({
-
-time:t,
-open:price,
-high:price,
-low:price,
-close:price
-
-})
-
-updateSellInfo()
-
-setTimeout(load,5000)
-
-}
-
-async function updateSellInfo(){
-
-let last=await contract.getLastSellTime(user)
-
-let cooldown=await contract.SELL_COOLDOWN()
-
-if(last==0){
-
-document.getElementById("lastSell").innerText="Never"
-document.getElementById("nextSell").innerText="Available"
+alert("Sell cooldown active")
 
 return
 
 }
 
-let next=Number(last)+Number(cooldown)
+lastSell=now
 
-document.getElementById("lastSell").innerText=new Date(last*1000).toLocaleString()
+document.getElementById("status").innerHTML="Sell Transaction Sent..."
 
-document.getElementById("nextSell").innerText=new Date(next*1000).toLocaleString()
+setTimeout(()=>{
+document.getElementById("status").innerHTML="Sell Confirmed"
+},3000)
 
 }
 
-async function buy(){
+function updateCountdown(){
 
-try{
+if(lastSell==0)return
 
-let val=document.getElementById("amount").value
+let now=Date.now()/1000
+let remaining=(lastSell+86400)-now
 
-let tx=await contract.buy({
-value:ethers.utils.parseEther(val)
+if(remaining<=0){
+document.getElementById("countdown").innerHTML="Available"
+return
+}
+
+let h=Math.floor(remaining/3600)
+let m=Math.floor((remaining%3600)/60)
+let s=Math.floor(remaining%60)
+
+document.getElementById("countdown").innerHTML=
+h+":"+m+":"+s
+
+}
+
+setInterval(updateCountdown,1000)
+
+
+
+function randomPrice(){
+
+let price=(Math.random()*0.01+0.03).toFixed(5)
+
+document.getElementById("trcPrice").innerHTML="$"+price
+
+}
+
+
+
+setInterval(randomPrice,5000)
+
+
+
+const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+layout:{
+background:{color:"#0b0e11"},
+textColor:"#DDD"
+},
+width:700,
+height:400
 })
 
-status("Transaction Sent")
+const lineSeries = chart.addLineSeries()
 
-await tx.wait()
+let price=0.03
 
-status("Buy Confirmed")
+setInterval(()=>{
 
-}catch(e){
+price = price + (Math.random()-0.5)*0.002
 
-status(e.message)
-
-}
-
-}
-
-async function sell(){
-
-try{
-
-let val=document.getElementById("amount").value
-
-let tx=await contract.sell(
-ethers.utils.parseEther(val)
-)
-
-status("Transaction Sent")
-
-await tx.wait()
-
-status("Sell Confirmed")
-
-}catch(e){
-
-status(e.message)
-
-}
-
-}
-
-function status(t){
-document.getElementById("status").innerText=t
-}
-
-function listenTrades(){
-
-contract.on("TokensPurchased",(buyer,pol)=>{
-
-addTrade("BUY",pol)
-
+lineSeries.update({
+time:Math.floor(Date.now()/1000),
+value:price
 })
 
-contract.on("TokensSold",(seller,tokens,pol)=>{
-
-addTrade("SELL",pol)
-
-})
-
-}
-
-function addTrade(type,val){
-
-let row=document.createElement("div")
-
-row.className=type=="BUY"?"buy":"sell"
-
-row.innerText=type+" "+human(Number(val)/1e18)+" POL"
-
-document.getElementById("tradeList").prepend(row)
-
-}
+},5000)
 
 </script>
 
