@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
 
-<head> 
+<head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>TRC DEX</title>
+<title>TRC Exchange</title>
 
 <link rel="stylesheet" href="style.css">
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 
 </head>
 
@@ -18,43 +20,69 @@
 
 <header>
 
-<div class="logo">TRC / POL</div>
+<h2>TRC / POL Exchange</h2>
 
-<div class="pricePanel">
+<button onclick="connectWallet()">Connect Wallet</button>
 
-TRC <span id="trcPrice">$0</span>
+<div id="walletAddress"></div>
 
-POL <span id="polPrice">$0</span>
+</header>
+
+
+<div class="stats">
+
+<div class="box">
+POL Price
+<div id="polPrice">$0</div>
+</div>
+
+<div class="box">
+TRC Price
+<div id="trcPrice">$0</div>
+</div>
+
+<div class="box">
+Your TRC
+<div id="trcBalance">0</div>
+</div>
+
+<div class="box">
+Your POL
+<div id="polBalance">0</div>
+</div>
+
+<div class="box">
+TRC Value
+<div id="trcValue">$0</div>
+</div>
 
 </div>
 
-<button id="connectBtn">Connect Wallet</button>
-
-</header>
 
 <div class="main">
 
 <div class="chartBox">
-
-<canvas id="priceChart"></canvas>
-
+<div id="chart"></div>
 </div>
+
 
 <div class="tradeBox">
 
-<h2>Trade TRC</h2>
+<h3>Buy TRC</h3>
 
-<div class="balance">
-Balance: <span id="trcBalance">0</span> TRC
-</div>
+<input id="buyAmount" placeholder="POL amount">
 
-<input id="buyAmount" placeholder="POL amount to buy">
+<button onclick="buyTRC()">BUY</button>
 
-<button id="buyBtn">BUY TRC</button>
+<h3>Sell TRC</h3>
 
-<input id="sellAmount" placeholder="POL amount to receive">
+<input id="sellAmount" placeholder="POL amount you want">
 
-<button id="sellBtn">SELL TRC</button>
+<button onclick="maxSell()">MAX</button>
+
+<button onclick="approveTRC()">Approve TRC</button>
+
+<button onclick="sellTRC()">SELL</button>
 
 <div class="cooldown">
 Next Sell: <span id="cooldown">Loading...</span>
@@ -63,14 +91,6 @@ Next Sell: <span id="cooldown">Loading...</span>
 <div id="status"></div>
 
 </div>
-
-</div>
-
-<div class="historyBox">
-
-<h3>Recent Trades</h3>
-
-<div id="history"></div>
 
 </div>
 
