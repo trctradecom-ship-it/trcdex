@@ -299,9 +299,7 @@ lineWidth:2
 
 let lastPrice = 0;
 
-
-// UPDATE CHART FUNCTION
-
+// UPDATE CHART
 function updateChart(price){
 
 let now = Math.floor(Date.now()/1000);
@@ -312,8 +310,6 @@ value: price
 });
 
 lastPrice = price;
-
-chart.timeScale().scrollToRealTime();
 
 }
 
