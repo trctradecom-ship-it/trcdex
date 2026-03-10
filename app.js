@@ -304,6 +304,8 @@ bottom:0.25
 
 });
 
+chart.priceScale('right').applyOptions({ autoScale:false });
+
 const series = chart.addLineSeries({
 color:"#00eaff",
 lineWidth:3
