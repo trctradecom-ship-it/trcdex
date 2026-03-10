@@ -292,9 +292,18 @@ secondsVisible:false
 }
 });
 
+chart.applyOptions({
+rightPriceScale:{
+scaleMargins:{
+top:0.3,
+bottom:0.25
+}
+}
+});
+
 const series = chart.addLineSeries({
 color:"#00eaff",
-lineWidth:2
+lineWidth:3
 });
 
 let lastPrice = 0;
@@ -303,14 +312,20 @@ let lastPrice = 0;
 
 function updateChart(price){
 
+if(lastPrice === 0){
+lastPrice = price;
+}
+
+let smoothPrice = lastPrice + (price - lastPrice) * 0.1;
+
 let now = Math.floor(Date.now()/1000);
 
 series.update({
 time: now,
-value: price
+value: smoothPrice
 });
 
-lastPrice = price;
+lastPrice = smoothPrice;
 
 }
 
