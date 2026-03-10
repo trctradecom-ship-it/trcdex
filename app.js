@@ -274,31 +274,34 @@ h+"h "+m+"m "+s+"s";
 // =======================
 
 const chartContainer = document.getElementById("chart");
-
 const chart = LightweightCharts.createChart(chartContainer,{
 width: chartContainer.clientWidth,
 height: 400,
+
 layout:{
 background:{color:"#111"},
-textColor:"#DDD"
-},
+textColor:"#DDD"}
+,
+
 grid:{
 vertLines:{color:"#222"},
 horzLines:{color:"#222"}
 },
+
 timeScale:{
 timeVisible:true,
-secondsVisible:false
-}
-});
+secondsVisible:false,
+rightBarStaysOnScroll:true
+},
 
-chart.applyOptions({
 rightPriceScale:{
+autoScale:true,
 scaleMargins:{
-top:0.3,
+top:0.25,
 bottom:0.25
 }
 }
+
 });
 
 const series = chart.addLineSeries({
@@ -306,17 +309,22 @@ color:"#00eaff",
 lineWidth:3
 });
 
+// keep chart fitted
+chart.timeScale().fitContent();
+
 let lastPrice = 0;
 
 // UPDATE CHART
 
 function updateChart(price){
 
+price = Number(price);
+
 if(lastPrice === 0){
 lastPrice = price;
 }
 
-let smoothPrice = lastPrice + (price - lastPrice) * 0.1;
+let smoothPrice = lastPrice + (price - lastPrice) * 0.15;
 
 let now = Math.floor(Date.now()/1000);
 
