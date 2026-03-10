@@ -213,3 +213,33 @@ box-sizing:border-box;
 .container{
 padding:15px;
 }
+
+
+/* Chart container */
+.chartBox{
+width:100%;
+height:260px;
+margin-bottom:20px;
+}
+
+/* Chart inside container */
+#chart{
+width:100%;
+height:100%;
+max-width:100%;
+}
+
+/* Mobile layout fix */
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+box-sizing:border-box;
+}
+
+button{
+width:100%;
+padding:14px;
+margin-top:10px;
+box-sizing:border-box;
+}
