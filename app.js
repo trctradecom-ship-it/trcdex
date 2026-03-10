@@ -269,8 +269,9 @@ h+"h "+m+"m "+s+"s";
 }
 
 
-
+// =======================
 // CHART
+// =======================
 
 const chartContainer = document.getElementById("chart");
 
@@ -284,33 +285,40 @@ textColor:"#DDD"
 grid:{
 vertLines:{color:"#222"},
 horzLines:{color:"#222"}
+},
+timeScale:{
+timeVisible:true,
+secondsVisible:false
 }
 });
 
-const series = chart.addLineSeries();
+const series = chart.addLineSeries({
+color:"#00eaff",
+lineWidth:2
+});
 
-let chartData = [];
-let timeIndex = 1;
 let lastPrice = 0;
 
-let baseTime = Math.floor(Date.now()/1000);
 
-// UPDATE CHART
+// UPDATE CHART FUNCTION
 
 function updateChart(price){
 
-baseTime = baseTime + 10;
+let now = Math.floor(Date.now()/1000);
 
 series.update({
-time: baseTime,
+time: now,
 value: price
 });
 
 lastPrice = price;
 
+chart.timeScale().scrollToRealTime();
+
 }
 
-// MOBILE RESIZE
+
+// MOBILE AUTO RESIZE
 
 window.addEventListener("resize", ()=>{
 
