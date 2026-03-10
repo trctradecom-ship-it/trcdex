@@ -301,12 +301,10 @@ function updateChart(price){
 
 baseTime = baseTime + 10;
 
-chartData.push({
+series.update({
 time: baseTime,
 value: price
 });
-
-series.setData(chartData);
 
 lastPrice = price;
 
