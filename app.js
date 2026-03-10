@@ -135,31 +135,46 @@ loadData();
 
 async function maxSell(){
 
-// get user TRC balance
+async function maxSell(){
+
+// user TRC balance
 let trcBal = await trc.balanceOf(user);
 
-// 1% daily limit
+// 1% TRC limit
 let maxTRC = trcBal.div(100);
 
-// TRC price in USD
+// TRC price USD
 let trcPrice = await ico.usdPrice();
 trcPrice = Number(ethers.utils.formatUnits(trcPrice,18));
 
-// POL price in USD
+// POL price USD
 let polPrice = await ico.getLatestPrice();
 polPrice = Number(polPrice) / 1e8;
 
 // convert TRC → USD
-let maxTRCReadable = Number(
-ethers.utils.formatUnits(maxTRC,18)
-);
+let maxTRCReadable =
+Number(ethers.utils.formatUnits(maxTRC,18));
 
 let usdValue = maxTRCReadable * trcPrice;
 
-// enforce minimum $1 rule
+let polAmount;
+
+// if max sell < $1 → show $1 sell
 if(usdValue < 1){
-alert("Minimum sell is $1");
-return;
+
+polAmount = 1 / polPrice;
+
+}else{
+
+// convert USD → POL
+polAmount = usdValue / polPrice;
+
+}
+
+// fill sell input
+document.getElementById("sellAmount").value =
+polAmount.toFixed(4);
+
 }
 
 // convert USD → POL
