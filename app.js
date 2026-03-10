@@ -294,15 +294,10 @@ let timeIndex = 1;
 let lastPrice = 0;
 
 
+
 // UPDATE CHART
 
 function updateChart(price){
-
-if(lastPrice===price){
-
-price = price + (Math.random()*0.2-0.1);
-
-}
 
 chartData.push({
 time: timeIndex,
@@ -316,7 +311,6 @@ lastPrice = price;
 timeIndex++;
 
 }
-
 
 
 // MOBILE RESIZE
