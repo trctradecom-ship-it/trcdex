@@ -135,20 +135,39 @@ loadData();
 
 async function maxSell(){
 
-let trcBal=await trc.balanceOf(user);
+// get user TRC balance
+let trcBal = await trc.balanceOf(user);
 
-let onePercent=trcBal.div(100);
+// 1% daily limit
+let maxTRC = trcBal.div(100);
 
-let price=await ico.usdPrice();
+// TRC price in USD
+let trcPrice = await ico.usdPrice();
+trcPrice = Number(ethers.utils.formatUnits(trcPrice,18));
 
-let polPrice=await ico.getLatestPrice();
+// POL price in USD
+let polPrice = await ico.getLatestPrice();
+polPrice = Number(polPrice) / 1e8;
 
-let usdValue=onePercent.mul(price).div(ethers.utils.parseUnits("1",18));
+// convert TRC → USD
+let maxTRCReadable = Number(
+ethers.utils.formatUnits(maxTRC,18)
+);
 
-let pol=usdValue.mul(1e8).div(polPrice);
+let usdValue = maxTRCReadable * trcPrice;
 
-document.getElementById("sellAmount").value=
-ethers.utils.formatEther(pol);
+// enforce minimum $1 rule
+if(usdValue < 1){
+alert("Minimum sell is $1");
+return;
+}
+
+// convert USD → POL
+let polAmount = usdValue / polPrice;
+
+// fill sell input
+document.getElementById("sellAmount").value =
+polAmount.toFixed(4);
 
 }
 
@@ -188,26 +207,58 @@ h+"h "+m+"m "+s+"s";
 }
 
 
-// CHART
 
-const chart = LightweightCharts.createChart(
-document.getElementById("chart"),
-{height:400}
-);
+
+// =======================
+// CHART (Responsive)
+// =======================
+
+const chartContainer = document.getElementById("chart");
+
+const chart = LightweightCharts.createChart(chartContainer,{
+width: chartContainer.clientWidth,
+height: 400,
+layout:{
+background:{color:"#111"},
+textColor:"#DDD"
+},
+grid:{
+vertLines:{color:"#222"},
+horzLines:{color:"#222"}
+}
+});
 
 const series = chart.addLineSeries();
 
-let data=[];
-let t=1;
+let chartData = [];
+let timeIndex = 1;
+
+
+// UPDATE CHART FUNCTION
 
 function updateChart(price){
 
-data.push({time:t,value:price});
-series.setData(data);
-t++;
+chartData.push({
+time: timeIndex,
+value: price
+});
+
+series.setData(chartData);
+
+timeIndex++;
 
 }
 
+
+// MOBILE AUTO RESIZE
+
+window.addEventListener("resize", ()=>{
+
+chart.applyOptions({
+width: chartContainer.clientWidth
+});
+
+});
 
 // AUTO REFRESH
 
