@@ -293,14 +293,16 @@ let chartData = [];
 let timeIndex = 1;
 let lastPrice = 0;
 
-
+let baseTime = Math.floor(Date.now()/1000);
 
 // UPDATE CHART
 
 function updateChart(price){
 
+baseTime = baseTime + 10;
+
 chartData.push({
-time: timeIndex,
+time: baseTime,
 value: price
 });
 
@@ -308,10 +310,7 @@ series.setData(chartData);
 
 lastPrice = price;
 
-timeIndex++;
-
 }
-
 
 // MOBILE RESIZE
 
