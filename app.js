@@ -304,11 +304,15 @@ bottom:0.25
 
 });
 
-chart.priceScale('right').applyOptions({ autoScale:false });
 
 const series = chart.addLineSeries({
 color:"#00eaff",
 lineWidth:3
+});
+
+chart.priceScale('right').setVisibleRange({
+minValue: 0,
+maxValue: 100000
 });
 
 // keep chart fitted
@@ -322,13 +326,13 @@ function updateChart(price){
 
 price = Number(price);
 
+let now = Math.floor(Date.now()/1000);
+
 if(lastPrice === 0){
 lastPrice = price;
 }
 
-let smoothPrice = lastPrice + (price - lastPrice) * 0.15;
-
-let now = Math.floor(Date.now()/1000);
+let smoothPrice = lastPrice + (price - lastPrice) * 0.05;
 
 series.update({
 time: now,
