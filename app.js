@@ -40,7 +40,8 @@ loadData();
 }
 
 
-// LOAD ALL DATA
+
+// LOAD DATA
 
 async function loadData(){
 
@@ -71,87 +72,138 @@ loadCooldown();
 }
 
 
+
 // BUY
 
 async function buyTRC(){
 
+try{
+
 let amount=document.getElementById("buyAmount").value;
+
+document.getElementById("status").innerText="Transaction Sending...";
 
 let tx=await ico.buy({
 value:ethers.utils.parseEther(amount)
 });
 
-document.getElementById("status").innerText="Buying...";
+document.getElementById("status").innerText="Transaction Pending...";
 
-await tx.wait();
+let receipt = await tx.wait();
 
-document.getElementById("status").innerText="Buy success";
+if(receipt.status===1){
+
+document.getElementById("status").innerText="Transaction Success";
 
 loadData();
 
+}else{
+
+document.getElementById("status").innerText="Transaction Failed";
+
 }
+
+}catch(e){
+
+document.getElementById("status").innerText="Transaction Failed";
+
+}
+
+}
+
 
 
 // APPROVE
 
 async function approveTRC(){
 
+try{
+
+document.getElementById("status").innerText="Approval Sending...";
+
 let tx=await trc.approve(
 ICO,
 ethers.constants.MaxUint256
 );
 
-document.getElementById("status").innerText="Approving...";
+document.getElementById("status").innerText="Approval Pending...";
 
-await tx.wait();
+let receipt = await tx.wait();
 
-document.getElementById("status").innerText="Approved";
+if(receipt.status===1){
+
+document.getElementById("status").innerText="Approval Success";
+
+}else{
+
+document.getElementById("status").innerText="Approval Failed";
 
 }
+
+}catch(e){
+
+document.getElementById("status").innerText="Approval Failed";
+
+}
+
+}
+
 
 
 // SELL
 
 async function sellTRC(){
 
+try{
+
 let amount=document.getElementById("sellAmount").value;
+
+document.getElementById("status").innerText="Transaction Sending...";
 
 let tx=await ico.sell(
 ethers.utils.parseEther(amount)
 );
 
-document.getElementById("status").innerText="Selling...";
+document.getElementById("status").innerText="Transaction Pending...";
 
-await tx.wait();
+let receipt = await tx.wait();
 
-document.getElementById("status").innerText="Sell success";
+if(receipt.status===1){
+
+document.getElementById("status").innerText="Transaction Success";
 
 loadData();
 
+}else{
+
+document.getElementById("status").innerText="Transaction Failed";
+
 }
+
+}catch(e){
+
+document.getElementById("status").innerText="Transaction Failed";
+
+}
+
+}
+
 
 
 // MAX SELL (1%)
 
 async function maxSell(){
 
-async function maxSell(){
-
-// user TRC balance
 let trcBal = await trc.balanceOf(user);
 
-// 1% TRC limit
 let maxTRC = trcBal.div(100);
 
-// TRC price USD
 let trcPrice = await ico.usdPrice();
 trcPrice = Number(ethers.utils.formatUnits(trcPrice,18));
 
-// POL price USD
 let polPrice = await ico.getLatestPrice();
-polPrice = Number(polPrice) / 1e8;
+polPrice = Number(polPrice)/1e8;
 
-// convert TRC → USD
 let maxTRCReadable =
 Number(ethers.utils.formatUnits(maxTRC,18));
 
@@ -159,37 +211,32 @@ let usdValue = maxTRCReadable * trcPrice;
 
 let polAmount;
 
-// if max sell < $1 → show $1 sell
 if(usdValue < 1){
 
 polAmount = 1 / polPrice;
 
 }else{
 
-// convert USD → POL
 polAmount = usdValue / polPrice;
 
 }
 
-// fill sell input
 document.getElementById("sellAmount").value =
 polAmount.toFixed(4);
 
 }
 
-// convert USD → POL
-let polAmount = usdValue / polPrice;
-
-// fill sell input
-document.getElementById("sellAmount").value =
-polAmount.toFixed(4);
-
-}
 
 
 // COOLDOWN TIMER
 
+let cooldownStarted=false;
+
 async function loadCooldown(){
+
+if(cooldownStarted) return;
+
+cooldownStarted=true;
 
 let last=await ico.getLastSellTime(user);
 let cd=await ico.SELL_COOLDOWN();
@@ -223,10 +270,7 @@ h+"h "+m+"m "+s+"s";
 
 
 
-
-// =======================
-// CHART (Responsive)
-// =======================
+// CHART
 
 const chartContainer = document.getElementById("chart");
 
@@ -247,11 +291,18 @@ const series = chart.addLineSeries();
 
 let chartData = [];
 let timeIndex = 1;
+let lastPrice = 0;
 
 
-// UPDATE CHART FUNCTION
+// UPDATE CHART
 
 function updateChart(price){
+
+if(lastPrice===price){
+
+price = price + (Math.random()*0.2-0.1);
+
+}
 
 chartData.push({
 time: timeIndex,
@@ -260,12 +311,15 @@ value: price
 
 series.setData(chartData);
 
+lastPrice = price;
+
 timeIndex++;
 
 }
 
 
-// MOBILE AUTO RESIZE
+
+// MOBILE RESIZE
 
 window.addEventListener("resize", ()=>{
 
@@ -274,6 +328,8 @@ width: chartContainer.clientWidth
 });
 
 });
+
+
 
 // AUTO REFRESH
 
