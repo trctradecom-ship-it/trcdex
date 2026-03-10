@@ -310,10 +310,6 @@ color:"#00eaff",
 lineWidth:3
 });
 
-chart.priceScale('right').setVisibleRange({
-minValue: 0,
-maxValue: 100000
-});
 
 // keep chart fitted
 chart.timeScale().fitContent();
