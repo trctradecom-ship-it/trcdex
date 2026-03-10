@@ -300,6 +300,7 @@ lineWidth:2
 let lastPrice = 0;
 
 // UPDATE CHART
+
 function updateChart(price){
 
 let now = Math.floor(Date.now()/1000);
