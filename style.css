@@ -243,3 +243,30 @@ padding:14px;
 margin-top:10px;
 box-sizing:border-box;
 }
+
+
+
+
+.tradeBox {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* space between sections */
+}
+
+.tradeBox h3 {
+  margin-top: 20px;
+}
+
+.tradeBox input {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.tradeBox button {
+  margin-top: 10px;
+}
+
+/* Add extra space before Sell section */
+.tradeBox h3:nth-of-type(2) {
+  margin-top: 30px;
+}
