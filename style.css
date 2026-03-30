@@ -505,3 +505,106 @@ header button {
 
 
 
+/* RESET */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #000;
+  color: #ddd;
+  font-family: Arial;
+}
+
+/* MAIN LAYOUT */
+.main {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+}
+
+/* CHART */
+.chartBox {
+  flex: 2;
+  height: 500px; /* IMPORTANT */
+  background: #111;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+#chart {
+  width: 100%;
+  height: 100%;
+}
+
+/* TRADE BOX */
+.tradeBox {
+  flex: 1;
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+/* INPUTS */
+.tradeBox input,
+.tradeBox button {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+/* CONTROLS */
+.chart-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tf-group,
+.indicator-group {
+  display: flex;
+  gap: 5px;
+}
+
+.chart-controls button {
+  padding: 6px 10px;
+  background: #1c1c1c;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.chart-controls button.active {
+  background: #00eaff;
+  color: #000;
+}
+
+/* 📱 MOBILE */
+@media (max-width: 700px) {
+
+  .main {
+    flex-direction: column;
+  }
+
+  .chartBox {
+    width: 100%;
+    height: 300px; /* smaller for mobile */
+  }
+
+  .tradeBox {
+    width: 100%;
+  }
+
+  .chart-controls {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+}
+
+
+
+
