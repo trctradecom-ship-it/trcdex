@@ -1,4 +1,3 @@
-
 const ICO = "0xA6F33c57891E52258d68BC99c593207E5C1B4a51";
 const TRC = "0xc08983be707bf4b763e7A0f3cCAD3fd00af6620d";
 
@@ -20,8 +19,40 @@ const erc20ABI = [
 ];
 
 
-// CONNECT WALLET
+// ========================== HANDLE TRANSACTIONS ==========================
+async function handleTx(tx){
+  try{
+    document.getElementById("status").innerHTML =
+      `<span class="tx-pending">⏳ Waiting for confirmation...</span>`;
 
+    const sent = await tx;
+
+    document.getElementById("status").innerHTML =
+      `<a href="https://polygonscan.com/tx/${sent.hash}" target="_blank">
+        🔄 Transaction Pending (View)
+      </a>`;
+
+    // ⚡ FAST CONFIRM (1 block)
+    const receipt = await provider.waitForTransaction(sent.hash, 1);
+
+    if(receipt.status === 1){
+      document.getElementById("status").innerHTML =
+        `<span class="tx-success">✅ Transaction Confirmed</span>`;
+
+      loadData();
+    }else{
+      document.getElementById("status").innerHTML =
+        `<span class="tx-fail">❌ Transaction Failed</span>`;
+    }
+
+  }catch(e){
+    document.getElementById("status").innerHTML =
+      `<span class="tx-fail">❌ Transaction Failed</span>`;
+  }
+}
+
+
+// CONNECT WALLET
 async function connectWallet(){
 
 await ethereum.request({method:'eth_requestAccounts'});
@@ -41,9 +72,7 @@ loadData();
 }
 
 
-
 // LOAD DATA
-
 async function loadData(){
 
 let trcBal = await trc.balanceOf(user);
@@ -73,126 +102,45 @@ loadCooldown();
 }
 
 
-
 // BUY
-
 async function buyTRC(){
-
 try{
-
 let amount=document.getElementById("buyAmount").value;
-
-document.getElementById("status").innerText="Transaction Sending...";
-
-let tx=await ico.buy({
-value:ethers.utils.parseEther(amount)
-});
-
-document.getElementById("status").innerText="Transaction Pending...";
-
-let receipt = await tx.wait();
-
-if(receipt.status===1){
-
-document.getElementById("status").innerText="Transaction Success";
-
-loadData();
-
-}else{
-
-document.getElementById("status").innerText="Transaction Failed";
-
-}
-
+await handleTx(
+  ico.buy({ value: ethers.utils.parseEther(amount) })
+);
 }catch(e){
-
 document.getElementById("status").innerText="Transaction Failed";
-
 }
-
 }
-
 
 
 // APPROVE
-
 async function approveTRC(){
-
 try{
-
-document.getElementById("status").innerText="Approval Sending...";
-
-let tx=await trc.approve(
-ICO,
-ethers.constants.MaxUint256
+await handleTx(
+  trc.approve(ICO, ethers.constants.MaxUint256)
 );
-
-document.getElementById("status").innerText="Approval Pending...";
-
-let receipt = await tx.wait();
-
-if(receipt.status===1){
-
-document.getElementById("status").innerText="Approval Success";
-
-}else{
-
-document.getElementById("status").innerText="Approval Failed";
-
-}
-
 }catch(e){
-
 document.getElementById("status").innerText="Approval Failed";
-
 }
-
 }
-
 
 
 // SELL
-
 async function sellTRC(){
-
 try{
-
 let amount=document.getElementById("sellAmount").value;
-
-document.getElementById("status").innerText="Transaction Sending...";
-
-let tx=await ico.sell(
-ethers.utils.parseEther(amount)
+await handleTx(
+  ico.sell(ethers.utils.parseEther(amount))
 );
-
-document.getElementById("status").innerText="Transaction Pending...";
-
-let receipt = await tx.wait();
-
-if(receipt.status===1){
-
-document.getElementById("status").innerText="Transaction Success";
-
-loadData();
-
-}else{
-
-document.getElementById("status").innerText="Transaction Failed";
-
-}
-
 }catch(e){
-
 document.getElementById("status").innerText="Transaction Failed";
-
 }
-
 }
-
 
 
 // MAX SELL (1%)
-
 async function maxSell(){
 
 let trcBal = await trc.balanceOf(user);
@@ -213,13 +161,9 @@ let usdValue = maxTRCReadable * trcPrice;
 let polAmount;
 
 if(usdValue < 1){
-
 polAmount = 1 / polPrice;
-
 }else{
-
 polAmount = usdValue / polPrice;
-
 }
 
 document.getElementById("sellAmount").value =
@@ -228,9 +172,7 @@ polAmount.toFixed(4);
 }
 
 
-
 // COOLDOWN TIMER
-
 let cooldownStarted=false;
 
 async function loadCooldown(){
@@ -251,11 +193,8 @@ let now=Math.floor(Date.now()/1000);
 let left=next-now;
 
 if(left<=0){
-
 document.getElementById("cooldown").innerText="Ready";
-
 return;
-
 }
 
 let h=Math.floor(left/3600);
@@ -271,7 +210,7 @@ h+"h "+m+"m "+s+"s";
 
 
 // =======================
-// CHART
+// CHART (UNCHANGED)
 // =======================
 
 const chartContainer = document.getElementById("chart");
@@ -305,19 +244,14 @@ bottom:0.25
 
 });
 
-
 const series = chart.addLineSeries({
 color:"#00eaff",
 lineWidth:3
 });
 
-
-// keep chart fitted
 chart.timeScale().fitContent();
 
 let lastPrice = 0;
-
-// UPDATE CHART
 
 function updateChart(price){
 
@@ -341,24 +275,16 @@ lastPrice = smoothPrice;
 }
 
 
-
-
-
 // AUTO REFRESH
-
 setInterval(()=>{
-
 if(user) loadData();
-
 },60000);
 
 
+// RESIZE
 window.addEventListener("resize", () => {
   chart.resize(
     chartContainer.clientWidth,
     chartContainer.clientHeight
   );
 });
-
-
-
