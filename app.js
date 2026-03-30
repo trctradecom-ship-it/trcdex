@@ -368,7 +368,16 @@ window.addEventListener("resize", () => {
 const candleSeries = chart.addCandlestickSeries();
 const volumeSeries = chart.addHistogramSeries({
   priceFormat: { type: 'volume' },
-  priceScaleId: 'volume'
+  priceScaleId: 'volume', // ✅ separate panel
+  color: '#26a69a'
+});
+
+// ✅ MOVE VOLUME TO BOTTOM
+chart.priceScale('volume').applyOptions({
+  scaleMargins: {
+    top: 0.8,
+    bottom: 0
+  }
 });
 
 chart.priceScale('volume').applyOptions({
