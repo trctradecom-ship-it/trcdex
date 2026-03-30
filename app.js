@@ -359,3 +359,198 @@ setInterval(()=>{
 if(user) loadData();
 
 },60000);
+
+
+
+
+// =======================
+// 🔥 ADVANCED CHART ADD-ON (DO NOT REMOVE OLD)
+// =======================
+
+// NEW SERIES (candles, volume, EMA)
+const candleSeries = chart.addCandlestickSeries();
+const volumeSeries = chart.addHistogramSeries({
+  priceFormat: { type: 'volume' },
+  priceScaleId: ''
+});
+
+volumeSeries.priceScale().applyOptions({
+  scaleMargins: { top: 0.8, bottom: 0 }
+});
+
+// EMA LINES
+const ema20Series = chart.addLineSeries({ color: "#00eaff", lineWidth: 2 });
+const ema50Series = chart.addLineSeries({ color: "#ffaa00", lineWidth: 2 });
+const ema200Series = chart.addLineSeries({ color: "#ff00ff", lineWidth: 2 });
+
+// DEFAULT SETTINGS
+let candles = [];
+let currentTF = 3600; // 1H default
+let lastCandleTime = 0;
+
+let showEMA20 = true;
+let showEMA50 = false;
+let showEMA200 = false;
+
+
+// =======================
+// TIMEFRAME SWITCH
+// =======================
+
+function setTimeframe(tf){
+
+document.querySelectorAll(".tf-group button")
+.forEach(btn => btn.classList.remove("active"));
+
+event.target.classList.add("active");
+
+const map = {
+"5m":300,
+"15m":900,
+"30m":1800,
+"1h":3600,
+"4h":14400,
+"1d":86400,
+"1w":604800
+};
+
+currentTF = map[tf];
+candles = [];
+lastCandleTime = 0;
+
+}
+
+
+// =======================
+// EMA TOGGLE
+// =======================
+
+function toggleEMA(type){
+
+event.target.classList.toggle("active");
+
+if(type===20) showEMA20=!showEMA20;
+if(type===50) showEMA50=!showEMA50;
+if(type===200) showEMA200=!showEMA200;
+
+}
+
+
+// =======================
+// EMA CALC
+// =======================
+
+function calcEMA(period){
+
+let k = 2/(period+1);
+let ema=[];
+
+candles.forEach((c,i)=>{
+if(i===0){
+ema.push(c.close);
+}else{
+ema.push(c.close*k + ema[i-1]*(1-k));
+}
+});
+
+return ema;
+}
+
+
+// =======================
+// 🔁 ADVANCED UPDATE (HOOK)
+// =======================
+
+// SAVE OLD FUNCTION
+const oldUpdateChart = updateChart;
+
+// OVERRIDE FUNCTION
+updateChart = function(price){
+
+// call old line chart
+oldUpdateChart(price);
+
+// NOW CANDLE LOGIC
+price = Number(price);
+
+let now = Math.floor(Date.now()/1000);
+let bucket = Math.floor(now/currentTF)*currentTF;
+
+if(bucket !== lastCandleTime){
+
+let prev = candles.length ? candles[candles.length-1].close : price;
+
+// SMALL GREEN DUMMY START
+let candle = {
+time: bucket,
+open: prev,
+high: price,
+low: price,
+close: price
+};
+
+candles.push(candle);
+candleSeries.update(candle);
+
+volumeSeries.update({
+time: bucket,
+value: Math.random()*50
+});
+
+lastCandleTime = bucket;
+
+}else{
+
+let c = candles[candles.length-1];
+
+c.high = Math.max(c.high, price);
+c.low = Math.min(c.low, price);
+c.close = price;
+
+candleSeries.update(c);
+
+volumeSeries.update({
+time: bucket,
+value: Math.random()*50
+});
+}
+
+
+// EMA UPDATE
+if(showEMA20){
+let ema = calcEMA(20);
+ema20Series.setData(candles.map((c,i)=>({time:c.time,value:ema[i]})));
+}else ema20Series.setData([]);
+
+if(showEMA50){
+let ema = calcEMA(50);
+ema50Series.setData(candles.map((c,i)=>({time:c.time,value:ema[i]})));
+}else ema50Series.setData([]);
+
+if(showEMA200){
+let ema = calcEMA(200);
+ema200Series.setData(candles.map((c,i)=>({time:c.time,value:ema[i]})));
+}else ema200Series.setData([]);
+
+};
+
+
+// =======================
+// 🟢 DUMMY CANDLES EVERY 5 MIN
+// =======================
+
+setInterval(()=>{
+
+if(!user) return;
+
+let last = candles.length
+? candles[candles.length-1].close
+: 1;
+
+// SIDEWAYS SMALL GREEN MOVE
+let price = last * (1 + (Math.random()*0.0005));
+
+updateChart(price);
+
+},300000); // 5 min
+
