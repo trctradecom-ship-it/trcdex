@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 
@@ -8,12 +9,15 @@
 
 <title>TRC Exchange</title>
 
+  
 <link rel="icon" href="./trcnew.png?v=2">
 <link rel="shortcut icon" href="./favicon.ico?v=2">
 <link rel="apple-touch-icon" href="./trcnew.png">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#000000">
 
+
+  
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
@@ -68,33 +72,7 @@ TRC Value
 <div class="main">
 
 <div class="chartBox">
-
-<!-- ✅ NEW: CHART CONTROLS (ADDED) -->
-<div class="chart-controls">
-
-  <!-- Timeframes -->
-  <div class="tf-group">
-    <button onclick="setTimeframe('5m')">5M</button>
-    <button onclick="setTimeframe('15m')">15M</button>
-    <button onclick="setTimeframe('30m')">30M</button>
-    <button onclick="setTimeframe('1h')" class="active">1H</button>
-    <button onclick="setTimeframe('4h')">4H</button>
-    <button onclick="setTimeframe('1d')">1D</button>
-    <button onclick="setTimeframe('1w')">1W</button>
-  </div>
-
-  <!-- Indicators -->
-  <div class="indicator-group">
-    <button onclick="toggleEMA(20)" class="active">EMA 20</button>
-    <button onclick="toggleEMA(50)">EMA 50</button>
-    <button onclick="toggleEMA(200)">EMA 200</button>
-  </div>
-
-</div>
-<!-- ✅ END NEW -->
-
 <div id="chart"></div>
-
 </div>
 
 
