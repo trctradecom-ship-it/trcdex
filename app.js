@@ -28,9 +28,10 @@ async function handleTx(tx){
     const sent = await tx;
 
     document.getElementById("status").innerHTML =
-      `<a href="https://polygonscan.com/tx/${sent.hash}" target="_blank">
-        🔄 Transaction Pending (View)
-      </a>`;
+    `<a href="https://polygonscan.com/tx/${sent.hash}" target="_blank"
+    style="color:gold;font-weight:bold;">
+    🔄 Transaction Pending (View)
+    </a>`;
 
     // ⚡ FAST CONFIRM (1 block)
     const receipt = await provider.waitForTransaction(sent.hash, 1);
