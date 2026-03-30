@@ -376,9 +376,7 @@ chart.priceScale('volume').applyOptions({
   }
 });
 
-volumeSeries.priceScale().applyOptions({
-  scaleMargins: { top: 0.8, bottom: 0 }
-});
+
 
 // EMA LINES
 const ema20Series = chart.addLineSeries({ color: "#00eaff", lineWidth: 2 });
@@ -496,7 +494,7 @@ candleSeries.update(candle);
 
 volumeSeries.update({
 time: bucket,
-value: Math.random() * 2
+value: Math.random() * 10
 });
 
 lastCandleTime = bucket;
@@ -513,7 +511,7 @@ candleSeries.update(c);
 
 volumeSeries.update({
 time: bucket,
-value: Math.random() * 2
+value: Math.random() * 10
 });
 }
 
