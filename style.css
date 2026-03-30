@@ -434,3 +434,17 @@ button:active {
 }
 
 
+
+.main {
+  display: flex;
+  flex-direction: column;
+}
+
+.chartBox {
+  width: 100%;
+}
+
+.tradeBox {
+  width: 100%;
+  margin-top: 10px;
+}
