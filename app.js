@@ -9,7 +9,9 @@ const icoABI = [
 "function buy() payable",
 "function sell(uint256)",
 "function getLastSellTime(address) view returns(uint256)",
-"function SELL_COOLDOWN() view returns(uint256)"
+"function SELL_COOLDOWN() view returns(uint256)",
+"event TokensPurchased(address,uint256,uint256)",
+"event TokensSold(address,uint256,uint256)"
 ];
 
 const erc20ABI = [
@@ -18,9 +20,7 @@ const erc20ABI = [
 "function allowance(address,address) view returns(uint256)"
 ];
 
-
 // CONNECT WALLET
-
 async function connectWallet(){
 
 await ethereum.request({method:'eth_requestAccounts'});
@@ -35,14 +35,13 @@ document.getElementById("walletAddress").innerText = user;
 ico = new ethers.Contract(ICO, icoABI, signer);
 trc = new ethers.Contract(TRC, erc20ABI, signer);
 
-loadData();
+await loadData();
+await loadInitialChart();
+setupEventListeners();
 
 }
 
-
-
 // LOAD DATA
-
 async function loadData(){
 
 let trcBal = await trc.balanceOf(user);
@@ -65,22 +64,14 @@ document.getElementById("polPrice").innerText = "$"+polPrice.toFixed(2);
 document.getElementById("trcValue").innerText =
 "$"+(trcBal*trcPrice).toFixed(2);
 
-updateChart(trcPrice);
-
 loadCooldown();
 
 }
 
-
-
 // BUY
-
 async function buyTRC(){
-
 try{
-
 let amount=document.getElementById("buyAmount").value;
-
 document.getElementById("status").innerText="Transaction Sending...";
 
 let tx=await ico.buy({
@@ -88,74 +79,42 @@ value:ethers.utils.parseEther(amount)
 });
 
 document.getElementById("status").innerText="Transaction Pending...";
-
 let receipt = await tx.wait();
 
 if(receipt.status===1){
-
 document.getElementById("status").innerText="Transaction Success";
-
 loadData();
-
 }else{
-
 document.getElementById("status").innerText="Transaction Failed";
-
 }
-
 }catch(e){
-
 document.getElementById("status").innerText="Transaction Failed";
-
 }
-
 }
-
-
 
 // APPROVE
-
 async function approveTRC(){
-
 try{
-
 document.getElementById("status").innerText="Approval Sending...";
 
-let tx=await trc.approve(
-ICO,
-ethers.constants.MaxUint256
-);
+let tx=await trc.approve(ICO,ethers.constants.MaxUint256);
 
 document.getElementById("status").innerText="Approval Pending...";
-
 let receipt = await tx.wait();
 
 if(receipt.status===1){
-
 document.getElementById("status").innerText="Approval Success";
-
 }else{
-
 document.getElementById("status").innerText="Approval Failed";
-
 }
-
 }catch(e){
-
 document.getElementById("status").innerText="Approval Failed";
-
 }
-
 }
-
-
 
 // SELL
-
 async function sellTRC(){
-
 try{
-
 let amount=document.getElementById("sellAmount").value;
 
 document.getElementById("status").innerText="Transaction Sending...";
@@ -165,37 +124,23 @@ ethers.utils.parseEther(amount)
 );
 
 document.getElementById("status").innerText="Transaction Pending...";
-
 let receipt = await tx.wait();
 
 if(receipt.status===1){
-
 document.getElementById("status").innerText="Transaction Success";
-
 loadData();
-
 }else{
-
 document.getElementById("status").innerText="Transaction Failed";
-
 }
-
 }catch(e){
-
 document.getElementById("status").innerText="Transaction Failed";
-
+}
 }
 
-}
-
-
-
-// MAX SELL (1%)
-
+// MAX SELL
 async function maxSell(){
 
 let trcBal = await trc.balanceOf(user);
-
 let maxTRC = trcBal.div(100);
 
 let trcPrice = await ico.usdPrice();
@@ -212,13 +157,9 @@ let usdValue = maxTRCReadable * trcPrice;
 let polAmount;
 
 if(usdValue < 1){
-
 polAmount = 1 / polPrice;
-
 }else{
-
 polAmount = usdValue / polPrice;
-
 }
 
 document.getElementById("sellAmount").value =
@@ -226,10 +167,7 @@ polAmount.toFixed(4);
 
 }
 
-
-
-// COOLDOWN TIMER
-
+// COOLDOWN
 let cooldownStarted=false;
 
 async function loadCooldown(){
@@ -246,15 +184,11 @@ let next=Number(last)+Number(cd);
 setInterval(()=>{
 
 let now=Math.floor(Date.now()/1000);
-
 let left=next-now;
 
 if(left<=0){
-
 document.getElementById("cooldown").innerText="Ready";
-
 return;
-
 }
 
 let h=Math.floor(left/3600);
@@ -268,95 +202,87 @@ h+"h "+m+"m "+s+"s";
 
 }
 
-
 // =======================
-// CHART
+// CHART (FINAL FIX)
 // =======================
 
 const chartContainer = document.getElementById("chart");
+
 const chart = LightweightCharts.createChart(chartContainer,{
 width: chartContainer.clientWidth,
 height: 400,
-
-layout:{
-background:{color:"#111"},
-textColor:"#DDD"}
-,
-
-grid:{
-vertLines:{color:"#222"},
-horzLines:{color:"#222"}
-},
-
-timeScale:{
-timeVisible:true,
-secondsVisible:false,
-rightBarStaysOnScroll:true
-},
-
-rightPriceScale:{
-autoScale:true,
-scaleMargins:{
-top:0.25,
-bottom:0.25
-}
-}
-
+layout:{ background:{color:"#111"}, textColor:"#DDD"},
+grid:{ vertLines:{color:"#222"}, horzLines:{color:"#222"}},
+timeScale:{ timeVisible:true },
+rightPriceScale:{ autoScale:true }
 });
-
 
 const series = chart.addLineSeries({
 color:"#00eaff",
 lineWidth:3
 });
 
+let chartData = [];
 
-// keep chart fitted
-chart.timeScale().fitContent();
+// INITIAL LOAD
+async function loadInitialChart(){
 
-let lastPrice = 0;
-
-// UPDATE CHART
-
-function updateChart(price){
-
-price = Number(price);
+let price = await ico.usdPrice();
+price = Number(ethers.utils.formatUnits(price,18));
 
 let now = Math.floor(Date.now()/1000);
 
-if(lastPrice === 0){
-lastPrice = price;
+for(let i=50;i>0;i--){
+chartData.push({ time: now - i*60, value: price });
 }
 
-let smoothPrice = lastPrice + (price - lastPrice) * 0.05;
+series.setData(chartData);
+}
 
-series.update({
-time: now,
-value: smoothPrice
+// PUSH PRICE
+async function pushChartPrice(){
+
+try{
+let price = await ico.usdPrice();
+price = Number(ethers.utils.formatUnits(price,18));
+
+let now = Math.floor(Date.now()/1000);
+
+chartData.push({ time: now, value: price });
+
+if(chartData.length > 300) chartData.shift();
+
+series.setData(chartData);
+
+}catch(e){}
+}
+
+// EVENTS
+function setupEventListeners(){
+
+ico.on("TokensPurchased", async ()=>{
+await pushChartPrice();
+await loadData();
 });
 
-lastPrice = smoothPrice;
+ico.on("TokensSold", async ()=>{
+await pushChartPrice();
+await loadData();
+});
 
 }
 
-
-
-
-
-// AUTO REFRESH
-
+// GLOBAL SYNC
 setInterval(()=>{
+if(ico) pushChartPrice();
+},10000);
 
+// DASHBOARD REFRESH
+setInterval(()=>{
 if(user) loadData();
-
 },60000);
 
-
+// RESIZE
 window.addEventListener("resize", () => {
-  chart.resize(
-    chartContainer.clientWidth,
-    chartContainer.clientHeight
-  );
+chart.resize(chartContainer.clientWidth,400);
 });
-
-
