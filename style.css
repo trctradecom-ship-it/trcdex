@@ -258,3 +258,179 @@ box-sizing:border-box;
 }
 
 
+
+
+
+
+/* =======================
+   GLOBAL
+======================= */
+
+body {
+  background: #000;
+  color: #ddd;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* =======================
+   MAIN LAYOUT
+======================= */
+
+.main {
+  display: flex;
+  gap: 15px;
+  padding: 10px;
+}
+
+/* Desktop layout */
+.chartBox {
+  flex: 2;
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.tradeBox {
+  flex: 1;
+}
+
+
+/* =======================
+   CHART
+======================= */
+
+#chart {
+  width: 100%;
+  height: 420px;
+}
+
+
+/* =======================
+   CONTROLS
+======================= */
+
+.chart-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* groups */
+.tf-group,
+.indicator-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+
+/* =======================
+   BUTTONS
+======================= */
+
+.chart-controls button {
+  background: #1c1c1c;
+  color: #aaa;
+  border: 1px solid #333;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 13px;
+  min-width: 45px;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.chart-controls button:hover {
+  background: #333;
+  color: #fff;
+}
+
+.chart-controls button.active {
+  background: #00eaff;
+  color: #000;
+  border-color: #00eaff;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+
+/* =======================
+   TABLET (<= 900px)
+======================= */
+
+@media (max-width: 900px) {
+
+  .main {
+    flex-direction: column;
+  }
+
+  .chartBox {
+    width: 100%;
+  }
+
+  .tradeBox {
+    width: 100%;
+  }
+
+}
+
+
+/* =======================
+   MOBILE (<= 600px)
+======================= */
+
+@media (max-width: 600px) {
+
+  /* stack controls */
+  .chart-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tf-group,
+  .indicator-group {
+    justify-content: space-between;
+  }
+
+  /* buttons full width feel */
+  .chart-controls button {
+    flex: 1;
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  /* smaller chart */
+  #chart {
+    height: 300px;
+  }
+
+}
+
+
+/* =======================
+   EXTRA SMALL (<= 400px)
+======================= */
+
+@media (max-width: 400px) {
+
+  .chart-controls button {
+    font-size: 11px;
+    padding: 6px;
+  }
+
+  #chart {
+    height: 260px;
+  }
+
+}
+
+
