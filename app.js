@@ -371,7 +371,14 @@ if(user) loadData();
 const candleSeries = chart.addCandlestickSeries();
 const volumeSeries = chart.addHistogramSeries({
   priceFormat: { type: 'volume' },
-  priceScaleId: ''
+  priceScaleId: 'volume'
+});
+
+chart.priceScale('volume').applyOptions({
+  scaleMargins: {
+    top: 0.8,
+    bottom: 0
+  }
 });
 
 volumeSeries.priceScale().applyOptions({
