@@ -262,3 +262,246 @@ box-sizing:border-box;
 
 
 
+
+
+
+
+/* =======================
+   GLOBAL RESET
+======================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: #000;
+  color: #ddd;
+  font-family: Arial, sans-serif;
+}
+
+
+/* =======================
+   HEADER
+======================= */
+
+header {
+  padding: 10px;
+  text-align: center;
+}
+
+header button {
+  margin-top: 8px;
+  padding: 8px;
+}
+
+
+/* =======================
+   STATS GRID
+======================= */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 10px;
+}
+
+.box {
+  background: #111;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+}
+
+
+/* =======================
+   MAIN LAYOUT
+======================= */
+
+.main {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+}
+
+/* LEFT = CHART */
+.chartBox {
+  flex: 2;
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* RIGHT = TRADE */
+.tradeBox {
+  flex: 1;
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+
+/* =======================
+   CHART
+======================= */
+
+#chart {
+  width: 100%;
+  height: 420px;
+}
+
+
+/* =======================
+   CONTROLS
+======================= */
+
+.chart-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tf-group,
+.indicator-group {
+  display: flex;
+  gap: 6px;
+}
+
+
+/* =======================
+   BUTTONS
+======================= */
+
+.chart-controls button {
+  background: #1c1c1c;
+  color: #aaa;
+  border: 1px solid #333;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.chart-controls button:hover {
+  background: #333;
+  color: #fff;
+}
+
+.chart-controls button.active {
+  background: #00eaff;
+  color: #000;
+}
+
+
+/* =======================
+   TRADE BOX
+======================= */
+
+.tradeBox input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+.tradeBox button {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+
+/* =======================
+   TABLET
+======================= */
+
+@media (max-width: 900px) {
+
+  .main {
+    flex-direction: column;
+  }
+
+  .chartBox,
+  .tradeBox {
+    width: 100%;
+  }
+
+}
+
+
+/* =======================
+   MOBILE
+======================= */
+
+@media (max-width: 600px) {
+
+  /* STACK EVERYTHING */
+  .main {
+    flex-direction: column;
+  }
+
+  .chartBox {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .tradeBox {
+    width: 100%;
+  }
+
+  /* FIX CHART SIZE */
+  #chart {
+    height: 280px;
+  }
+
+  /* STATS GRID MOBILE */
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* BUTTONS SMALL */
+  .chart-controls button {
+    flex: 1;
+    font-size: 11px;
+    padding: 6px;
+  }
+
+}
+
+
+/* =======================
+   LAPTOP LARGE VIEW
+======================= */
+
+@media (min-width: 1000px) {
+
+  /* Bigger timeframe buttons */
+  .tf-group button {
+    font-size: 14px;
+    padding: 8px 14px;
+  }
+
+}
+
+
+
+
+
+
+
+
