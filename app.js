@@ -367,19 +367,8 @@ window.addEventListener("resize", () => {
 // NEW SERIES (candles, volume, EMA)
 const candleSeries = chart.addCandlestickSeries();
 const volumeSeries = chart.addHistogramSeries({
-  priceFormat: { type: 'volume' },
-  priceScaleId: 'volume', // ✅ separate panel
-  color: '#26a69a'
+  color: 'rgba(0,255,255,0.2)'
 });
-
-// ✅ MOVE VOLUME TO BOTTOM
-chart.priceScale('volume').applyOptions({
-  scaleMargins: {
-    top: 0.8,
-    bottom: 0
-  }
-});
-
 chart.priceScale('volume').applyOptions({
   scaleMargins: {
     top: 0.8,
@@ -507,7 +496,7 @@ candleSeries.update(candle);
 
 volumeSeries.update({
 time: bucket,
-value: Math.random() * 3 + 1
+value: Math.random() * 2
 });
 
 lastCandleTime = bucket;
@@ -524,7 +513,7 @@ candleSeries.update(c);
 
 volumeSeries.update({
 time: bucket,
-value: Math.random() * 3 + 1
+value: Math.random() * 2
 });
 }
 
