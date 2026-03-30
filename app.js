@@ -340,15 +340,6 @@ lastPrice = smoothPrice;
 }
 
 
-// MOBILE AUTO RESIZE
-
-window.addEventListener("resize", ()=>{
-
-chart.applyOptions({
-width: chartContainer.clientWidth
-});
-
-});
 
 
 
@@ -361,6 +352,12 @@ if(user) loadData();
 },60000);
 
 
+window.addEventListener("resize", () => {
+  chart.resize(
+    chartContainer.clientWidth,
+    chartContainer.clientHeight
+  );
+});
 
 
 // =======================
