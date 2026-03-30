@@ -607,4 +607,7 @@ body {
 
 
 
-
+/* make volume bars smaller */
+#volumeChart {
+  height: 50px;
+}
