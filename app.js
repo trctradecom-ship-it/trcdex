@@ -494,7 +494,7 @@ candleSeries.update(candle);
 
 volumeSeries.update({
 time: bucket,
-value: Math.random() * 10
+value: Math.random() * 5
 });
 
 lastCandleTime = bucket;
@@ -511,7 +511,7 @@ candleSeries.update(c);
 
 volumeSeries.update({
 time: bucket,
-value: Math.random() * 10
+value: Math.random() * 5
 });
 }
 
